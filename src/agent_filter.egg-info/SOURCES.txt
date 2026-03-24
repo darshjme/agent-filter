@@ -1,0 +1,9 @@
+README.md
+pyproject.toml
+src/agent_filter/__init__.py
+src/agent_filter/core.py
+src/agent_filter.egg-info/PKG-INFO
+src/agent_filter.egg-info/SOURCES.txt
+src/agent_filter.egg-info/dependency_links.txt
+src/agent_filter.egg-info/top_level.txt
+tests/test_agent_filter.py

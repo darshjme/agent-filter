@@ -1,0 +1,115 @@
+# agent-filter
+
+**Composable data filtering and transformation pipeline for agent outputs.**
+
+Agent outputs are noisy — hallucinations, duplicate content, irrelevant data, malformed strings.  
+`agent-filter` gives you a clean, chainable pipeline to fix that.
+
+## Installation
+
+```bash
+pip install agent-filter
+```
+
+## Quick Start — Cleaning Agent Output
+
+```python
+from agent_filter import Pipeline, Transformer
+
+raw_outputs = [
+    "  Great answer!  ",
+    "",
+    None,
+    "BUY NOW — CLICK HERE ADS",
+    "The capital of France is Paris.",
+    "The capital of France is Paris.",   # duplicate
+    "Some hallucinated URL: https://totally-fake-llm.io/nope",
+    "Python was created by Guido van Rossum.",
+]
+
+pipeline = (
+    Pipeline()
+    .add(Pipeline.strip_empty())                              # drop None / ""
+    .add(Transformer(lambda x: x.strip()))                    # trim whitespace
+    .add(Pipeline.keyword_exclude(["ads", "buy now", "hallucinated"]))  # remove spam/hallucinations
+    .add(Pipeline.dedup())                                    # remove duplicates
+    .add(Pipeline.truncate(120))                              # cap length
+    .add(Pipeline.limit(10))                                  # keep top 10
+)
+
+clean = pipeline(raw_outputs)
+for item in clean:
+    print(item)
+# Great answer!
+# The capital of France is Paris.
+# Python was created by Guido van Rossum.
+```
+
+## Components
+
+### `Filter`
+Base class. Override `apply(items) -> list`.
+
+```python
+from agent_filter import Filter
+
+class LengthFilter(Filter):
+    def apply(self, items):
+        return [i for i in items if isinstance(i, str) and len(i) > 10]
+```
+
+### `PredicateFilter`
+Keep items matching a callable predicate.
+
+```python
+from agent_filter import PredicateFilter
+
+f = PredicateFilter(lambda x: isinstance(x, str) and x.startswith("Result:"))
+f(["Result: A", "Noise", "Result: B"])  # → ["Result: A", "Result: B"]
+```
+
+### `Transformer`
+Map each item through a function (no items removed).
+
+```python
+from agent_filter import Transformer
+
+t = Transformer(str.lower)
+t(["HELLO", "WORLD"])  # → ["hello", "world"]
+```
+
+### `Pipeline`
+Chain any combination of filters and transformers.
+
+```python
+from agent_filter import Pipeline
+
+p = (
+    Pipeline()
+    .add(Pipeline.strip_empty())
+    .add(Pipeline.dedup())
+    .add(Pipeline.truncate(80))
+    .add(Pipeline.limit(5))
+)
+results = p(my_items)
+```
+
+## Built-in Steps
+
+| Factory | Description |
+|---|---|
+| `Pipeline.dedup()` | Remove duplicate items (order-preserving) |
+| `Pipeline.strip_empty()` | Remove `None` and `""` |
+| `Pipeline.truncate(n)` | Truncate strings to n characters |
+| `Pipeline.limit(n)` | Keep first n items |
+| `Pipeline.regex_filter(pattern)` | Keep strings matching regex |
+| `Pipeline.keyword_exclude(words)` | Remove strings containing any keyword |
+
+## Requirements
+
+- Python ≥ 3.10
+- Zero dependencies
+
+## License
+
+MIT
