@@ -1,9 +1,23 @@
+<div align="center">
+<img src="assets/hero.svg" width="100%"/>
+</div>
+
 # agent-filter
 
-**Composable data filtering and transformation pipeline for agent outputs.**
+**Data filtering and transformation pipeline for LLM agents. Zero external dependencies.**
 
-Agent outputs are noisy — hallucinations, duplicate content, irrelevant data, malformed strings.  
-`agent-filter` gives you a clean, chainable pipeline to fix that.
+[![PyPI](https://img.shields.io/pypi/v/agent-filter?color=blue)](https://pypi.org/project/agent-filter/)
+[![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://python.org)
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+[![Zero deps](https://img.shields.io/badge/dependencies-zero-brightgreen)](pyproject.toml)
+
+---
+
+## The Problem
+
+Production LLM agents fail silently. Without data filtering and transformation pipeline, you get undefined behaviour at scale — race conditions, lost state, cascading failures, and no way to debug what went wrong.
+
+`agent-filter` gives you a production-ready data filtering and transformation pipeline primitive with a clean API, tested edge cases, and zero configuration.
 
 ## Installation
 
@@ -11,105 +25,88 @@ Agent outputs are noisy — hallucinations, duplicate content, irrelevant data, 
 pip install agent-filter
 ```
 
-## Quick Start — Cleaning Agent Output
+Or from source:
 
-```python
-from agent_filter import Pipeline, Transformer
-
-raw_outputs = [
-    "  Great answer!  ",
-    "",
-    None,
-    "BUY NOW — CLICK HERE ADS",
-    "The capital of France is Paris.",
-    "The capital of France is Paris.",   # duplicate
-    "Some hallucinated URL: https://totally-fake-llm.io/nope",
-    "Python was created by Guido van Rossum.",
-]
-
-pipeline = (
-    Pipeline()
-    .add(Pipeline.strip_empty())                              # drop None / ""
-    .add(Transformer(lambda x: x.strip()))                    # trim whitespace
-    .add(Pipeline.keyword_exclude(["ads", "buy now", "hallucinated"]))  # remove spam/hallucinations
-    .add(Pipeline.dedup())                                    # remove duplicates
-    .add(Pipeline.truncate(120))                              # cap length
-    .add(Pipeline.limit(10))                                  # keep top 10
-)
-
-clean = pipeline(raw_outputs)
-for item in clean:
-    print(item)
-# Great answer!
-# The capital of France is Paris.
-# Python was created by Guido van Rossum.
+```bash
+git clone https://github.com/darshjme/agent-filter.git
+cd agent-filter
+pip install -e .
 ```
 
-## Components
-
-### `Filter`
-Base class. Override `apply(items) -> list`.
+## Quick Start
 
 ```python
-from agent_filter import Filter
+from agent_filter import *  # see API reference below
 
-class LengthFilter(Filter):
-    def apply(self, items):
-        return [i for i in items if isinstance(i, str) and len(i) > 10]
+# See examples/ directory for complete working examples
 ```
 
-### `PredicateFilter`
-Keep items matching a callable predicate.
+## API Reference
 
-```python
-from agent_filter import PredicateFilter
+The main classes and functions are defined in `agent_filter/__init__.py`.
 
-f = PredicateFilter(lambda x: isinstance(x, str) and x.startswith("Result:"))
-f(["Result: A", "Noise", "Result: B"])  # → ["Result: A", "Result: B"]
+Key exports: `Dedup · truncate · regex · keyword exclude · composable`
+
+All classes follow a consistent interface:
+- Instantiate with sensible defaults
+- Compose with other arsenal libraries
+- Zero external dependencies required
+
+See the source code and `tests/` directory for verified usage examples.
+
+## How It Works
+
+```mermaid
+flowchart LR
+    A[Agent Task] --> B[agent-filter]
+    B --> C{Decision}
+    C -->|success| D[✅ Result]
+    C -->|failure| E[⚠️ Handle]
+    E --> B
+
+    style B fill:#161b22,stroke:#8957e5,stroke-width:2,color:#8957e5
+    style D fill:#1a3320,stroke:#238636,color:#3fb950
+    style E fill:#3d1a1a,stroke:#f85149,color:#f85149
 ```
 
-### `Transformer`
-Map each item through a function (no items removed).
+```mermaid
+sequenceDiagram
+    participant Agent
+    participant AgentFilter as agent-filter
+    participant Output
 
-```python
-from agent_filter import Transformer
+    Agent->>AgentFilter: initialize()
+    AgentFilter-->>Agent: ready
 
-t = Transformer(str.lower)
-t(["HELLO", "WORLD"])  # → ["hello", "world"]
+    loop Agent Run
+        Agent->>AgentFilter: process(input)
+        AgentFilter-->>Agent: result
+    end
+
+    Agent->>Output: deliver(result)
 ```
 
-### `Pipeline`
-Chain any combination of filters and transformers.
+## Philosophy
 
-```python
-from agent_filter import Pipeline
+The Ganga purifies what flows through her. agent-filter purifies what flows through your pipeline.
 
-p = (
-    Pipeline()
-    .add(Pipeline.strip_empty())
-    .add(Pipeline.dedup())
-    .add(Pipeline.truncate(80))
-    .add(Pipeline.limit(5))
-)
-results = p(my_items)
-```
+---
 
-## Built-in Steps
+## Part of the Arsenal
 
-| Factory | Description |
-|---|---|
-| `Pipeline.dedup()` | Remove duplicate items (order-preserving) |
-| `Pipeline.strip_empty()` | Remove `None` and `""` |
-| `Pipeline.truncate(n)` | Truncate strings to n characters |
-| `Pipeline.limit(n)` | Keep first n items |
-| `Pipeline.regex_filter(pattern)` | Keep strings matching regex |
-| `Pipeline.keyword_exclude(words)` | Remove strings containing any keyword |
+`agent-filter` is one of six production libraries for LLM agents:
 
-## Requirements
+| Library | Purpose |
+|---------|---------|
+| [herald](https://github.com/darshjme/herald) | Semantic task routing |
+| [engram](https://github.com/darshjme/engram) | Agent memory |
+| [sentinel](https://github.com/darshjme/sentinel) | ReAct loop guards |
+| [verdict](https://github.com/darshjme/verdict) | Agent evaluation |
+| [agent-guardrails](https://github.com/darshjme/agent-guardrails) | Output validation |
+| [agent-observability](https://github.com/darshjme/agent-observability) | Tracing & metrics |
 
-- Python ≥ 3.10
-- Zero dependencies
+→ [arsenal](https://github.com/darshjme/arsenal) — the complete stack
 
-## License
+---
 
-MIT
+*Built by [Darshankumar Joshi](https://github.com/darshjme), Gujarat, India.*
