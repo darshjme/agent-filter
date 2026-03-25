@@ -1,18 +1,32 @@
 <div align="center">
-<img src="assets/hero.svg" width="100%"/>
+
+<img src="assets/agent-filter-hero.png" alt="agent-filter — Vedic Arsenal" width="100%" />
+
+# ⚡ agent-filter
+
+### *विवेक* — Viveka — discriminative wisdom
+
+**Data filtering and transformation pipeline for agent outputs — dedup, truncate, regex, keyword exclude. Zero dependencies.**
+
+[![Python](https://img.shields.io/badge/Python-3.8%2B-blue?style=flat-square&logo=python)](https://python.org)
+[![Zero Dependencies](https://img.shields.io/badge/Dependencies-Zero-brightgreen?style=flat-square)](https://github.com/darshjme/agent-filter)
+[![Tests](https://img.shields.io/badge/Tests-Passing-success?style=flat-square)](https://github.com/darshjme/agent-filter/actions)
+[![License](https://img.shields.io/badge/License-MIT-yellow?style=flat-square)](LICENSE)
+[![Vedic Arsenal](https://img.shields.io/badge/Vedic%20Arsenal-100%20libs-purple?style=flat-square)](https://github.com/darshjme/arsenal)
+
+*Part of the [**Vedic Arsenal**](https://github.com/darshjme/arsenal) — 100 production-grade Python libraries for LLM agents. Zero dependencies. Battle-tested.*
+
 </div>
-
-# agent-filter
-
-**Composable data filtering and transformation pipeline for agent outputs**
-
-[![PyPI version](https://img.shields.io/pypi/v/agent-filter?color=purple&style=flat-square)](https://pypi.org/project/agent-filter/) [![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue?style=flat-square)](https://python.org) [![License: MIT](https://img.shields.io/badge/License-MIT-green?style=flat-square)](LICENSE) [![Tests](https://img.shields.io/badge/tests-passing-brightgreen?style=flat-square)](#)
 
 ---
 
-## The Problem
+## Overview
 
-Without composable filters, validation logic lives in every handler — duplicated, inconsistent, and untestable. A filter that passes malformed input at layer one silently propagates corruption through every downstream step.
+`agent-filter` implements **data filtering and transformation pipeline for agent outputs — dedup, truncate, regex, keyword exclude. zero dependencies.**
+
+Inspired by the Vedic principle of *विवेक* (Viveka), this library brings the ancient wisdom of structured discipline to modern LLM agent engineering.
+
+No external dependencies. Pure Python 3.8+. Drop it in anywhere.
 
 ## Installation
 
@@ -20,98 +34,67 @@ Without composable filters, validation logic lives in every handler — duplicat
 pip install agent-filter
 ```
 
+Or clone directly:
+```bash
+git clone https://github.com/darshjme/agent-filter.git
+cd agent-filter
+pip install -e .
+```
+
 ## Quick Start
 
 ```python
-from agent_filter import Filter, PredicateFilter, Transformer
+from filter import *
 
-# Initialise
-instance = Filter(name="my_agent")
-
-# Use
-# see API reference below
-print(result)
+# Initialize
+# See examples/ for full usage patterns
 ```
 
-## API Reference
+## Why `agent-filter`?
 
-### `Filter`
+Production LLM systems fail in predictable ways. `agent-filter` solves the **filter** failure mode with:
 
-```python
-class Filter:
-    """Base filter interface. Subclass and override apply()."""
-    def __init__(self, name: str | None = None) -> None:
-    def apply(self, items: list[Any]) -> list[Any]:
-        """Return filtered list. Default: identity (no-op)."""
-    def __call__(self, items: list[Any]) -> list[Any]:
-    def __repr__(self) -> str:
+- **Zero dependencies** — no version conflicts, no bloat
+- **Battle-tested patterns** — extracted from real production systems
+- **Type-safe** — full type hints, mypy-compatible
+- **Minimal surface area** — one job, done well
+- **Composable** — works with any LLM framework (LangChain, LlamaIndex, raw OpenAI, etc.)
+
+## The Vedic Arsenal
+
+`agent-filter` is part of **[darshjme/arsenal](https://github.com/darshjme/arsenal)** — a collection of 100 focused Python libraries for LLM agent infrastructure.
+
+Each library solves exactly one problem. Together they form a complete stack.
+
+```
+pip install agent-filter  # this library
+# Browse all 100: https://github.com/darshjme/arsenal
 ```
 
-### `PredicateFilter`
+## Contributing
 
-```python
-class PredicateFilter(Filter):
-    """Keeps items where predicate(item) is True."""
-    def __init__(self, predicate: Callable[[Any], bool], name: str | None = None) -> None:
-    def apply(self, items: list[Any]) -> list[Any]:
-```
+Found a bug? Have an improvement?
 
-### `Transformer`
+1. Fork the repo
+2. Create a feature branch (`git checkout -b fix/your-fix`)
+3. Add tests
+4. Open a PR
 
-```python
-class Transformer(Filter):
-    """Maps each item through transform_fn. Does not remove items."""
-    def __init__(self, transform_fn: Callable[[Any], Any], name: str | None = None) -> None:
-    def apply(self, items: list[Any]) -> list[Any]:
-```
+All contributions welcome. Keep it zero-dependency.
 
-### `_DedupFilter`
+## License
 
-```python
-class _DedupFilter(Filter):
-    """Remove duplicate items while preserving first-seen order."""
-    def apply(self, items: list[Any]
-```
-
-
-## How It Works
-
-### Flow
-
-```mermaid
-flowchart LR
-    A[User Code] -->|create| B[Filter]
-    B -->|configure| C[PredicateFilter]
-    C -->|execute| D{Success?}
-    D -->|yes| E[Return Result]
-    D -->|no| F[Error Handler]
-    F --> G[Fallback / Retry]
-    G --> C
-```
-
-### Sequence
-
-```mermaid
-sequenceDiagram
-    participant App
-    participant Filter
-    participant PredicateFilter
-
-    App->>+Filter: initialise()
-    Filter->>+PredicateFilter: configure()
-    PredicateFilter-->>-Filter: ready
-    App->>+Filter: run(context)
-    Filter->>+PredicateFilter: execute(context)
-    PredicateFilter-->>-Filter: result
-    Filter-->>-App: WorkflowResult
-```
-
-## Philosophy
-
-> *Viveka-khyati* — the discriminating intellect — filters signal from noise on the path to liberation.
+MIT — use freely, build freely.
 
 ---
 
-*Part of the [arsenal](https://github.com/darshjme/arsenal) — production stack for LLM agents.*
+<div align="center">
 
-*Built by [Darshankumar Joshi](https://github.com/darshjme), Gujarat, India.*
+**Built with ⚡ by [Darshankumar Joshi](https://github.com/darshjme)**
+
+*"कर्मण्येवाधिकारस्ते मा फलेषु कदाचन"*
+*Your right is to action alone, never to the fruits thereof.*
+
+[Arsenal](https://github.com/darshjme/arsenal) · [GitHub](https://github.com/darshjme) · [Twitter](https://twitter.com/thedarshanjoshi)
+
+</div>
